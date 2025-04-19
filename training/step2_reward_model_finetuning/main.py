@@ -212,7 +212,8 @@ def main():
     args = parse_args()
 
     if args.local_rank == -1:
-        device = torch.device(get_accelerator().device_name())
+        # device = torch.device(get_accelerator().device_name())
+        device = torch.device("cuda:5")
     else:
         get_accelerator().set_device(args.local_rank)
         device = torch.device(get_accelerator().device_name(), args.local_rank)
