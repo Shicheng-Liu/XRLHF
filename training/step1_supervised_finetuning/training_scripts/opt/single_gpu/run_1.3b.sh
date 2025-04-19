@@ -10,7 +10,7 @@ MODEL_NAME="facebook/opt-1.3b"
 DATA_PATH="/gpuhome/hbz5148/workspace/siyuan/rlhf/dataset/Dahoas/full-hh-rlhf"
 
 if [ "$OUTPUT" == "" ]; then
-    OUTPUT=./output/opt-1.3/full-hh-rlhf
+    OUTPUT=./output/opt-1.3b/full-hh-rlhf
 fi
 if [ "$ZERO_STAGE" == "" ]; then
     ZERO_STAGE=0
