@@ -14,8 +14,9 @@ class PromptRawDataset(object):
         self.output_path = output_path
         self.seed = seed
         self.local_rank = local_rank
-        if not dataset_name == "local/jsonfile":
-            self.raw_datasets = load_dataset(dataset_name)
+        self.raw_datasets = load_dataset(dataset_name)
+        #if not dataset_name == "local/jsonfile":
+        #    self.raw_datasets = load_dataset(dataset_name)
 
     def get_train_data(self):
         return

@@ -7,7 +7,7 @@ export TRANSFORMERS_OFFLINE=1
 OUTPUT=$1
 ZERO_STAGE=$2
 MODEL_NAME="facebook/opt-1.3b"
-DATA_PATH="~/workspace/siyuan/rlhf/dataset/Dahoas/rm-static"
+DATA_PATH="/gpuhome/hbz5148/workspace/siyuan/rlhf/dataset/Dahoas/rm-static"
 
 if [ "$OUTPUT" == "" ]; then
     OUTPUT=./output
