@@ -132,7 +132,17 @@ def print_utils(gen_output):
 def prompt_eval(args, model_baseline, model_fintuned, tokenizer, device,
                 prompts):
     for prompt in prompts:
-        inputs = tokenizer(prompt, return_tensors="pt", padding=True).to(device)
+        inputs = tokenizer(prompt, return_tensors="pt", padding=True, truncation=True).to(device)
+        
+        # Ensure the pad_token is set, especially if it's the same as eos_token
+        tokenizer.pad_token = tokenizer.eos_token
+        model_baseline.config.pad_token_id = tokenizer.pad_token_id
+        model_fintuned.config.pad_token_id = tokenizer.pad_token_id
+
+        # Manually set the attention mask if it's not already set
+        if 'attention_mask' not in inputs:
+            inputs['attention_mask'] = (inputs['input_ids'] != tokenizer.pad_token_id).to(torch.long)
+        
         print("==========Baseline: Greedy=========")
         r_base = generate(model_baseline,
                           tokenizer,
