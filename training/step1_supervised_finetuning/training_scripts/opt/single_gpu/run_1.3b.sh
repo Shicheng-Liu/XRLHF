@@ -18,9 +18,9 @@ fi
 mkdir -p $OUTPUT
 
 
-deepspeed --num_gpus 1 main.py --model_name_or_path $MODEL_NAME \
+(deepspeed --num_gpus 1 main.py --model_name_or_path $MODEL_NAME \
    --gradient_accumulation_steps 8 --lora_dim 128 --zero_stage $ZERO_STAGE \
-   --data_path $DATA_PATH
+   --data_path $DATA_PATH \
    --enable_tensorboard \
    --tensorboard_path $OUTPUT \
-   --deepspeed --output_dir $OUTPUT 2>&1 | tee $OUTPUT/training.log
+   --deepspeed --output_dir $OUTPUT) 2>&1 | tee $OUTPUT/training.log
