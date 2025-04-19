@@ -90,6 +90,7 @@ def generate(model,
              max_new_tokens=100):
 
     generate_ids = model.generate(inputs.input_ids,
+                                  attention_mask=inputs.attention_mask
                                   num_beams=num_beams,
                                   num_beam_groups=num_beam_groups,
                                   do_sample=do_sample,
