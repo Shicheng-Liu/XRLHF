@@ -8,4 +8,4 @@
 export CUDA_VISIBLE_DEVICES=0
 python prompt_eval.py \
     --model_name_or_path_baseline facebook/opt-1.3b \
-    --model_name_or_path_finetune output
+    --model_name_or_path_finetune output/opt-1.3b/full-hh-rlhf
