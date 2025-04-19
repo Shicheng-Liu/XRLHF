@@ -132,7 +132,7 @@ def print_utils(gen_output):
 def prompt_eval(args, model_baseline, model_fintuned, tokenizer, device,
                 prompts):
     for prompt in prompts:
-        inputs = tokenizer(prompt, return_tensors="pt").to(device)
+        inputs = tokenizer(prompt, return_tensors="pt", padding=True).to(device)
         print("==========Baseline: Greedy=========")
         r_base = generate(model_baseline,
                           tokenizer,
