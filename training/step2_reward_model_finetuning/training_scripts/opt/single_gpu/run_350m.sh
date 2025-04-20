@@ -4,6 +4,9 @@ set -x
 export HF_DATASETS_OFFLINE=1
 export TRANSFORMERS_OFFLINE=1
 
+
+DEV=5
+PORT=1235
 OUTPUT=$1
 ZERO_STAGE=$2
 MODEL_NAME="facebook/opt-1.3b"
@@ -17,7 +20,8 @@ if [ "$ZERO_STAGE" == "" ]; then
 fi
 mkdir -p $OUTPUT
 
-(deepspeed --num_gpus 1 main.py --model_name_or_path $MODEL_NAME \
+(deepspeed ---include localhost:$DEV --master_port $PORT \
+main.py --model_name_or_path $MODEL_NAME \
    --num_padding_at_beginning 1 --weight_decay 0.1 --dropout 0.0 --gradient_accumulation_steps 4 --zero_stage $ZERO_STAGE \
    --data_path $DATA_PATH \
    --enable_tensorboard \
