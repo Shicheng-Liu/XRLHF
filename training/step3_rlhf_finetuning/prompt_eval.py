@@ -51,10 +51,6 @@ def parse_args():
         "We did not see this in other models but keep it as an option for now.",
     )
     parser.add_argument(
-        "--add_eot_token",
-        action='store_true',
-        help="Add <|endoftext|> as additional special token to tokenizer")
-    parser.add_argument(
         "--num_beams",
         type=int,
         default=1,
