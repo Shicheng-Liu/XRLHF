@@ -9,11 +9,11 @@ DEV=6
 PORT=1235
 OUTPUT=$1
 ZERO_STAGE=$2
-MODEL_NAME="facebook/opt-350m"
+MODEL_NAME="facebook/opt-1.3b"
 DATA_PATH="/gpuhome/hbz5148/workspace/siyuan/rlhf/dataset/Dahoas/full-hh-rlhf"
 
 if [ "$OUTPUT" == "" ]; then
-    OUTPUT=./output/opt-350m/full-hh-rlhf
+    OUTPUT=./output/opt-1.3b/full-hh-rlhf
 fi
 if [ "$ZERO_STAGE" == "" ]; then
     ZERO_STAGE=0
