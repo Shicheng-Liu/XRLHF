@@ -10,7 +10,7 @@ from transformers import (
     AutoModelForCausalLM, )
 
 from dschat.utils.model.model_utils import create_hf_model
-from dschat.utils.utils import load_hf_tokenizer
+from dschat.utils.utils import to_device, load_hf_tokenizer
 from deepspeed import get_accelerator
 
 logger = logging.getLogger(__name__)
@@ -36,6 +36,24 @@ def parse_args():
         help="Path to rlhf model",
         required=True,
     )
+    parser.add_argument(
+        "--model_name_or_path_reward",
+        type=str,
+        help="Path to reward model",
+        required=True,
+    )
+    parser.add_argument(
+        "--num_padding_at_beginning",
+        type=int,
+        default=1,
+        help=
+        "OPT model has a fixed number (1) of padding tokens at the beginning of the input. "
+        "We did not see this in other models but keep it as an option for now.",
+    )
+    parser.add_argument(
+        "--add_eot_token",
+        action='store_true',
+        help="Add <|endoftext|> as additional special token to tokenizer")
     parser.add_argument(
         "--num_beams",
         type=int,
@@ -84,6 +102,41 @@ def parse_args():
     args = parser.parse_args()
 
     return args
+
+
+def load_stuff(model_name_or_path, num_padding_at_beginning,
+               additional_special_tokens):
+
+    tokenizer = load_hf_tokenizer(model_name_or_path,
+                                  fast_tokenizer=True,
+                                  add_special_tokens=additional_special_tokens)
+    tokenizer.pad_token = tokenizer.eos_token
+    model = create_critic_model(model_name_or_path,
+                                tokenizer,
+                                None,
+                                num_padding_at_beginning,
+                                rlhf_training=True,
+                                dropout=0.)
+
+    return model, tokenizer
+
+def prepare_singlesample(prompt,
+                         good_ans,
+                         tokenizer,
+                         max_seq_len=512,
+                         end_of_conversation_token="<|endoftext|>"):
+    chosen_sentence = prompt + good_ans + end_of_conversation_token
+    chosen_token = tokenizer(chosen_sentence,
+                             max_length=max_seq_len,
+                             padding="max_length",
+                             truncation=True,
+                             return_tensors="pt")
+
+    batch = {}
+    batch["input_ids"] = chosen_token["input_ids"]
+    batch["attention_mask"] = chosen_token["attention_mask"]
+
+    return batch
 
 
 def generate(model,
@@ -136,8 +189,7 @@ def print_utils(gen_output):
         print()
 
 
-def prompt_eval(args, model_baseline, model_fintuned, model_rlhf, tokenizer, device,
-                prompts):
+def prompt_eval(args, model_baseline, model_fintuned, model_rlhf, tokenizer, reward_model, reward_tokenizer, device, prompts):
     for prompt in prompts:
         inputs = tokenizer(prompt, return_tensors="pt", padding=True, truncation=True).to(device)
         
@@ -158,6 +210,16 @@ def prompt_eval(args, model_baseline, model_fintuned, model_rlhf, tokenizer, dev
                           num_return_sequences=args.num_return_sequences,
                           max_new_tokens=args.max_new_tokens)
         print_utils(r_base)
+        base_batch = prepare_singlesample(prompt, r_base, reward_tokenizer, max_seq_len=512, end_of_conversation_token=args.end_of_conversation_token)
+        base_batch = to_device(base_batch, device)
+        reward_model.eval()
+        # Run inference
+        with torch.no_grad():
+            base_outputs = reward_model.forward_value(
+                **base_batch, prompt_length=max(2, args.num_padding_at_beginning)
+            )
+        print("baseline answer score: ", base_outputs["chosen_end_scores"].item())
+
         print("==========finetune: Greedy=========")
         r_finetune_g = generate(model_fintuned,
                                 tokenizer,
@@ -166,6 +228,16 @@ def prompt_eval(args, model_baseline, model_fintuned, model_rlhf, tokenizer, dev
                                 num_return_sequences=args.num_return_sequences,
                                 max_new_tokens=args.max_new_tokens)
         print_utils(r_finetune_g)
+        finetune_batch = prepare_singlesample(prompt, r_finetune_g, reward_tokenizer, max_seq_len=512, end_of_conversation_token=args.end_of_conversation_token)
+        finetune_batch = to_device(finetune_batch, device)
+        
+        # Run inference
+        with torch.no_grad():
+            finetune_outputs = reward_model.forward_value(
+                **finetune_batch, prompt_length=max(2, args.num_padding_at_beginning)
+            )
+        print("finetune answer score: ", finetune_outputs["chosen_end_scores"].item())
+
         print("==========rlhf: Greedy=========")
         r_rlhf_g = generate(model_rlhf,
                                 tokenizer,
@@ -174,6 +246,15 @@ def prompt_eval(args, model_baseline, model_fintuned, model_rlhf, tokenizer, dev
                                 num_return_sequences=args.num_return_sequences,
                                 max_new_tokens=args.max_new_tokens)
         print_utils(r_rlhf_g)
+        rlhf_batch = prepare_singlesample(prompt, r_rlhf_g, reward_tokenizer, max_seq_len=512, end_of_conversation_token=args.end_of_conversation_token)
+        rlhf_batch = to_device(rlhf_batch, device)
+        
+        # Run inference
+        with torch.no_grad():
+            rlhf_outputs = reward_model.forward_value(
+                **rlhf_batch, prompt_length=max(2, args.num_padding_at_beginning)
+            )
+        print("rlhf answer score: ", rlhf_outputs["chosen_end_scores"].item())
         # Note: we use the above simplest greedy search as the baseline. Users can also use other baseline methods,
         # such as beam search, multinomial sampling, and beam-search multinomial sampling.
         # We provide examples as below for users to try.
@@ -238,10 +319,19 @@ def main():
     model_rlhf = create_hf_model(AutoModelForCausalLM,
                                      args.model_name_or_path_rlhf,
                                      tokenizer, None)
+    
+    args.end_of_conversation_token = "<|endoftext|>"
+    additional_special_tokens = args.end_of_conversation_token if args.add_eot_token else None
+
+    reward_model, reward_tokenizer = load_stuff(args.model_name_or_path_reward,
+                                     args.num_padding_at_beginning,
+                                     additional_special_tokens)
 
     model_baseline.to(device)
     model_fintuned.to(device)
     model_rlhf.to(device)
+    reward_model.to(device)
+    
 
     # One observation: if the prompt ends with a space " ", there is a high chance that
     # the original model (without finetuning) will stuck and produce no response.
@@ -274,7 +364,7 @@ def main():
             "Human: 鳥が冬に南に移動するのはなぜですか? Assistant:"
         ]
 
-    prompt_eval(args, model_baseline, model_fintuned, model_rlhf, tokenizer, device,
+    prompt_eval(args, model_baseline, model_fintuned, model_rlhf, tokenizer, reward_model, reward_tokenizer, device,
                 prompts)
 
 
