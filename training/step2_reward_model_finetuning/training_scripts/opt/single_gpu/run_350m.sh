@@ -20,6 +20,8 @@ if [ "$ZERO_STAGE" == "" ]; then
 fi
 mkdir -p $OUTPUT
 
+export CUDA_VISIBLE_DEVICES=$DEV
+
 (deepspeed --include localhost:$DEV --master_port $PORT \
 main.py --model_name_or_path $MODEL_NAME \
    --num_padding_at_beginning 1 --weight_decay 0.1 --dropout 0.0 --gradient_accumulation_steps 4 --zero_stage $ZERO_STAGE \
