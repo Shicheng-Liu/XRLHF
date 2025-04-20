@@ -217,7 +217,7 @@ def main():
     deepspeed.init_distributed()
     get_accelerator().set_device(args.local_rank)
     device = torch.device(get_accelerator().device_name(), args.local_rank)
-    print(f"[Rank {args.local_rank}] Using device: {device}")
+    #print(f"[Rank {args.local_rank}] Using device: {device}")
         # Initializes the distributed backend which will take care of sychronizing nodes/GPUs
         # torch.distributed.init_process_group(backend='nccl')
         

@@ -21,7 +21,6 @@ fi
 mkdir -p $OUTPUT
 
 export CUDA_VISIBLE_DEVICES=$DEV
-echo "Using GPUs: $CUDA_VISIBLE_DEVICES"
 
 (deepspeed --include localhost:$DEV --master_port $PORT \
 main.py --model_name_or_path $MODEL_NAME \
