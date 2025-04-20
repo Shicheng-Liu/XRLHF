@@ -48,9 +48,11 @@ class DeepSpeedPPOTrainer():
         self.actor_model = self.rlhf_engine.actor
         self.actor_model = self.actor_model.to(torch.float32)
         self.critic_model = self.rlhf_engine.critic
+        self.critic_model = self.critic_model.to(torch.float32)
         self.ref_model = self.rlhf_engine.ref
         self.ref_model = self.ref_model.to(torch.float32)
         self.reward_model = self.rlhf_engine.reward
+        self.reward_model = self.reward_model.to(torch.float32)
         self.tokenizer = self.rlhf_engine.tokenizer
         self.args = args
         self.max_answer_seq_len = args.max_answer_seq_len
