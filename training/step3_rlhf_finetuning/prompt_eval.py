@@ -121,7 +121,7 @@ def prepare_singlesample(prompt,
                          tokenizer,
                          max_seq_len=512,
                          end_of_conversation_token="<|endoftext|>"):
-    chosen_sentence = prompt + good_ans + end_of_conversation_token
+    chosen_sentence = prompt + good_ans[0] + end_of_conversation_token
     chosen_token = tokenizer(chosen_sentence,
                              max_length=max_seq_len,
                              padding="max_length",
