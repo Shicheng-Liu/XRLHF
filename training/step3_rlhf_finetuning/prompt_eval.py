@@ -185,7 +185,7 @@ def print_utils(gen_output):
         print()
 
 
-def prompt_eval(args, model_baseline, model_fintuned, model_rlhf, tokenizer, reward_model, reward_tokenizer, device, prompts):
+def prompt_eval(args, model_baseline, model_fintuned, model_rlhf, tokenizer, reward_model, device, prompts):
     for prompt in prompts:
         inputs = tokenizer(prompt, return_tensors="pt", padding=True, truncation=True).to(device)
         
@@ -319,7 +319,7 @@ def main():
     args.end_of_conversation_token = "<|endoftext|>"
     additional_special_tokens = args.end_of_conversation_token if args.add_eot_token else None
 
-    reward_model, reward_tokenizer = load_stuff(args.model_name_or_path_reward,
+    reward_model, _ = load_stuff(args.model_name_or_path_reward,
                                      args.num_padding_at_beginning,
                                      additional_special_tokens)
 
@@ -360,7 +360,7 @@ def main():
             "Human: 鳥が冬に南に移動するのはなぜですか? Assistant:"
         ]
 
-    prompt_eval(args, model_baseline, model_fintuned, model_rlhf, tokenizer, reward_model, reward_tokenizer, device,
+    prompt_eval(args, model_baseline, model_fintuned, model_rlhf, tokenizer, reward_model, device,
                 prompts)
 
 
