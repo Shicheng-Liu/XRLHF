@@ -30,6 +30,7 @@ main.py \
    --model_name_or_path $MODEL_NAME \
    --gradient_accumulation_steps 8 \
    --lora_dim 128 \
+   --per_device_train_batch_size 8 \
    --zero_stage $ZERO_STAGE \
    --data_path $DATA_PATH \
    --enable_tensorboard \
