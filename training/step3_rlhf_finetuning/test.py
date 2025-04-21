@@ -284,16 +284,16 @@ def prompt_eval(args, model_baseline, model_fintuned, model_rlhf, tokenizer, rew
         #print("rlhf answer score: ", rlhf_outputs["chosen_end_scores"].item())
         
 
-        test_results = []
-        for p, b, s, r in zip(prompts, base_response, finetune_response, rlhf_response):
-            test_results.append({
-                "prompt": p,
-                "response_base": b,
-                "response_sft": s,
-                "response_rlhf": r
-            })
-        with open("test_result.json","w") as f:
-            json.dump(test_results,f,indent=4)
+    test_results = []
+    for p, b, s, r in zip(prompts, base_response, finetune_response, rlhf_response):
+        test_results.append({
+            "prompt": p,
+            "response_base": b,
+            "response_sft": s,
+            "response_rlhf": r
+        })
+    with open("test_result.json","w") as f:
+        json.dump(test_results,f,indent=4)
         # Note: we use the above simplest greedy search as the baseline. Users can also use other baseline methods,
         # such as beam search, multinomial sampling, and beam-search multinomial sampling.
         # We provide examples as below for users to try.
@@ -335,8 +335,8 @@ def prompt_eval(args, model_baseline, model_fintuned, model_rlhf, tokenizer, rew
         #print("====================prompt end=============================")
         #print()
         #print()
-        print("====================test reward=============================")
-        return reward_base, reward_finetune, reward_rlhf
+    print("====================test reward=============================")
+    return reward_base, reward_finetune, reward_rlhf
 
 
 def main():
