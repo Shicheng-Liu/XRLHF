@@ -5,8 +5,9 @@
 # DeepSpeed Team
 
 # You can provide two models to compare the performance of the baseline and the finetuned model
-#~/workspace/siyuan/rlhf/training/step2_reward_model_finetuning/output/opt-350m/full-hh-rlhf \
-MODEL_NAME = "PKUAlignment/beaver-7b-v3.0-reward"
+#~/workspace/siyuan/rlhf/training/step2_reward_model_finetuning/output/opt-350m/full-hh-rlhf 
+
+MODEL_NAME="PKUAlignment/beaver-7b-v3.0-reward"
 
 CUDA_VISIBLE_DEVICES=6 python test.py \
     --model_name_or_path_baseline facebook/opt-1.3b \
