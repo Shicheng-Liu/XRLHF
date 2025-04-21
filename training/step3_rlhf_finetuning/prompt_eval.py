@@ -335,12 +335,12 @@ def main():
     # to make it a more meaningful comparison.
     if args.language == "English":
         prompts = [
-            "Human: Please tell me about Microsoft in a few sentence? Assistant:",
-            "Human: Explain the moon landing to a 6 year old in a few sentences. Assistant:",
-            "Human: Write a short poem about a wise frog. Assistant:",
-            "Human: Who was president of the United States in 1955? Assistant:",
-            "Human: How does a telescope work? Assistant:",
-            "Human: Why do birds migrate south for the winter? Assistant:"
+            "\n\nHuman: Please tell me about Microsoft in a few sentence?\n\nAssistant:",
+            "\n\nHuman: Explain the moon landing to a 6 year old in a few sentences.\n\nAssistant:",
+            "\n\nHuman: Write a short poem about a wise frog.\n\nAssistant:",
+            "\n\nHuman: Who was president of the United States in 1955?\n\nAssistant:",
+            "\n\nHuman: How does a telescope work?\n\nAssistant:",
+            "\n\nHuman: Why do birds migrate south for the winter?\n\nAssistant:"
         ]
     elif args.language == "Chinese":
         prompts = [
