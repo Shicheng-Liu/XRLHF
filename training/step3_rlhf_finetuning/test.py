@@ -7,8 +7,7 @@ import logging
 import torch
 import json
 import numpy as np
-from transformers import (
-    AutoModelForCausalLM, )
+from transformers import AutoModelForCausalLM, AutoTokenizer, AutoModelForSequenceClassification
 
 from dschat.utils.model.model_utils import create_hf_model, create_critic_model
 from dschat.utils.utils import to_device, load_hf_tokenizer
@@ -352,9 +351,13 @@ def main():
     args.end_of_conversation_token = "<|endoftext|>"
     additional_special_tokens = args.end_of_conversation_token if args.add_eot_token else None
 
-    reward_model, reward_tokenizer = load_stuff(args.model_name_or_path_reward,
-                                     args.num_padding_at_beginning,
-                                     additional_special_tokens)
+    if "opt" in args.model_name_or_path_reward:
+        reward_model, reward_tokenizer = load_stuff(args.model_name_or_path_reward,
+                                        args.num_padding_at_beginning,
+                                        additional_special_tokens)
+    else:
+        reward_tokenizer = AutoTokenizer.from_pretrained(args.model_name_or_path_reward)
+        reward_model = AutoModelForSequenceClassification.from_pretrained(args.model_name_or_path_reward, device_map="auto", torch_dtype="auto")
 
     model_baseline.to(device)
     model_fintuned.to(device)
