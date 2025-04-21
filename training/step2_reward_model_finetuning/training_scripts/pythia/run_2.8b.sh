@@ -31,6 +31,7 @@ export CUDA_VISIBLE_DEVICES=$DEV
 main.py --model_name_or_path $MODEL_NAME \
    --num_padding_at_beginning 1 --weight_decay 0.1 --dropout 0.0 --gradient_accumulation_steps 4 --zero_stage $ZERO_STAGE \
    --data_path $DATA_PATH \
+   --per_device_train_batch_size 8 \
    --enable_tensorboard \
    --tensorboard_path $OUTPUT \
    --deepspeed --output_dir $OUTPUT) 2>&1 | tee $OUTPUT/training.log
