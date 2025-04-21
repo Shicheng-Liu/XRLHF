@@ -365,7 +365,7 @@ def main():
     # the original model (without finetuning) will stuck and produce no response.
     # Finetuned models have less such issue. Thus following prompts all end with ":"
     # to make it a more meaningful comparison.
-    ds = load_dataset("json", data_files="test.json")["train"]
+    ds = load_dataset("json", data_files=args.data_path)["train"]
     prompts = ds["prompt"]
 
     reward_base, reward_finetune, reward_rlhf = prompt_eval(args, model_baseline, model_fintuned, model_rlhf, tokenizer, reward_model, device, prompts)
