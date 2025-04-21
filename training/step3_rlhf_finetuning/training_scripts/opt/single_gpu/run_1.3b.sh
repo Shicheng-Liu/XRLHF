@@ -8,7 +8,7 @@ DEV=6
 PORT=1236
 BASELINE_ACTOR_MODEL_PATH=facebook/opt-1.3b
 ACTOR_MODEL_PATH=~/workspace/siyuan/rlhf/training/step1_supervised_finetuning/output/opt-1.3b/full-hh-rlhf
-CRITIC_MODEL_PATH=~/workspace/siyuan/rlhf/training/step2_reward_model_finetuning/output/opt-1.3b/full-hh-rlhf
+CRITIC_MODEL_PATH=~/workspace/siyuan/rlhf/training/step2_reward_model_finetuning/output/opt-350m/full-hh-rlhf
 DATA_PATH="/gpuhome/hbz5148/workspace/siyuan/rlhf/dataset/Dahoas/full-hh-rlhf"
 
 
