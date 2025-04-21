@@ -5,5 +5,5 @@
 # DeepSpeed Team
 
 # Add the path to the finetuned model
-CUDA_VISIBLE_DEVICES=0,3 python  rw_eval.py \
+CUDA_VISIBLE_DEVICES=3 python  rw_eval.py \
     --model_name_or_path output/pythia-2.8b/full-hh-rlhf
