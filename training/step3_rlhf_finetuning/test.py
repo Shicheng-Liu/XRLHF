@@ -356,8 +356,8 @@ def main():
                                         args.num_padding_at_beginning,
                                         additional_special_tokens)
     else:
-        from huggingface_hub import login
-        login(token="")
+        #from huggingface_hub import login
+        #login(token="")
         reward_tokenizer = AutoTokenizer.from_pretrained(args.model_name_or_path_reward)
         reward_model = AutoModelForSequenceClassification.from_pretrained(args.model_name_or_path_reward, device_map="auto", torch_dtype="auto")
 
