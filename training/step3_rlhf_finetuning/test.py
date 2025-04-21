@@ -231,7 +231,7 @@ def prompt_eval(args, model_baseline, model_fintuned, model_rlhf, tokenizer, rew
                 
             else:
                 base_outputs = reward_model(**base_batch)
-                reward_base.append(base_outputs.logits.squeeze(-1).cpu().numpy())
+                reward_base.append(base_outputs.logits.squeeze(-1).float().cpu().numpy())
                 
         #print("baseline answer score: ", base_outputs["chosen_end_scores"].item())
         
@@ -256,7 +256,7 @@ def prompt_eval(args, model_baseline, model_fintuned, model_rlhf, tokenizer, rew
                 
             else:
                 finetune_outputs = reward_model(**finetune_batch)
-                reward_finetune.append(finetune_outputs.logits.squeeze(-1).cpu().numpy())
+                reward_finetune.append(finetune_outputs.logits.squeeze(-1).float().cpu().numpy())
                 
         #print("finetune answer score: ", finetune_outputs["chosen_end_scores"].item())
         
@@ -280,7 +280,7 @@ def prompt_eval(args, model_baseline, model_fintuned, model_rlhf, tokenizer, rew
                 reward_rlhf.append(rlhf_outputs["chosen_end_scores"].item())
             else:
                 rlhf_outputs = reward_model(**rlhf_batch)
-                reward_rlhf.append(rlhf_outputs.logits.squeeze(-1).cpu().numpy())
+                reward_rlhf.append(rlhf_outputs.logits.squeeze(-1).float().cpu().numpy())
         #print("rlhf answer score: ", rlhf_outputs["chosen_end_scores"].item())
         
 
