@@ -370,7 +370,7 @@ def main():
             model.step()
             end = time.time()
             if torch.distributed.get_rank() == 0:
-                print_throughput(model.model, args, end - start,
+                print_throughput(model.module, args, end - start,
                                  args.global_rank)
 
         # Evaluate perplexity on the validation set.
