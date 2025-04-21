@@ -244,7 +244,7 @@ def main():
     args.end_of_conversation_token = "<|endoftext|>"
     additional_special_tokens = args.end_of_conversation_token if args.add_eot_token else None
     tokenizer = load_hf_tokenizer(args.model_name_or_path,
-                                  fast_tokenizer=True,
+                                  fast_tokenizer=False,
                                   add_special_tokens=additional_special_tokens)
     rm_model = create_critic_model(args.model_name_or_path,
                                    tokenizer,
