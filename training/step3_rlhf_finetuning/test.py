@@ -225,11 +225,16 @@ def prompt_eval(args, model_baseline, model_fintuned, model_rlhf, tokenizer, rew
         reward_model.eval()
         # Run inference
         with torch.no_grad():
-            base_outputs = reward_model.forward_value(
-                **base_batch, prompt_length=max(2, args.num_padding_at_beginning)
-            )
+            if "opt" in args.model_name_or_path_reward:
+                base_outputs = reward_model.forward_value(**base_batch, prompt_length=max(2, args.num_padding_at_beginning))
+                reward_base.append(base_outputs["chosen_end_scores"].item())
+                
+            else:
+                base_outputs = reward_model(**base_batch)
+                reward_base.append(base_outputs.logits.squeeze(-1))
+                
         #print("baseline answer score: ", base_outputs["chosen_end_scores"].item())
-        reward_base.append(base_outputs["chosen_end_scores"].item())
+        
 
         #print("==========finetune: Greedy=========")
         r_finetune_g = generate(model_fintuned,
@@ -245,11 +250,16 @@ def prompt_eval(args, model_baseline, model_fintuned, model_rlhf, tokenizer, rew
         
         # Run inference
         with torch.no_grad():
-            finetune_outputs = reward_model.forward_value(
-                **finetune_batch, prompt_length=max(2, args.num_padding_at_beginning)
-            )
+            if "opt" in args.model_name_or_path_reward:
+                finetune_outputs = reward_model.forward_value(**finetune_batch, prompt_length=max(2, args.num_padding_at_beginning))
+                reward_finetune.append(finetune_outputs["chosen_end_scores"].item())
+                
+            else:
+                finetune_outputs = reward_model(**finetune_batch)
+                reward_finetune.append(finetune_outputs.logits.squeeze(-1))
+                
         #print("finetune answer score: ", finetune_outputs["chosen_end_scores"].item())
-        reward_finetune.append(finetune_outputs["chosen_end_scores"].item())
+        
 
         #print("==========rlhf: Greedy=========")
         r_rlhf_g = generate(model_rlhf,
@@ -265,11 +275,14 @@ def prompt_eval(args, model_baseline, model_fintuned, model_rlhf, tokenizer, rew
         
         # Run inference
         with torch.no_grad():
-            rlhf_outputs = reward_model.forward_value(
-                **rlhf_batch, prompt_length=max(2, args.num_padding_at_beginning)
-            )
+            if "opt" in args.model_name_or_path_reward:
+                rlhf_outputs = reward_model.forward_value(**rlhf_batch, prompt_length=max(2, args.num_padding_at_beginning))
+                reward_rlhf.append(rlhf_outputs["chosen_end_scores"].item())
+            else:
+                rlhf_outputs = reward_model(**rlhf_batch)
+                reward_rlhf.append(rlhf_outputs.logits.squeeze(-1))
         #print("rlhf answer score: ", rlhf_outputs["chosen_end_scores"].item())
-        reward_rlhf.append(rlhf_outputs["chosen_end_scores"].item())
+        
 
         test_results = []
         for p, b, s, r in zip(prompts, base_response, finetune_response, rlhf_response):
