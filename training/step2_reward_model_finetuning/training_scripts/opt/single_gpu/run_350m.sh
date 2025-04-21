@@ -16,7 +16,7 @@ PORT=1235
 OUTPUT=$1
 ZERO_STAGE=$2
 MODEL_NAME="facebook/opt-350m"
-DATA_PATH="/gpuhome/hbz5148/workspace/siyuan/rlhf/dataset/Dahoas/full-hh-rlhf"
+DATA_PATH="/gpu02home/hbz5148/workspace/siyuan/rlhf/dataset/Dahoas/full-hh-rlhf"
 
 if [ "$OUTPUT" == "" ]; then
     OUTPUT=./output/opt-350m/full-hh-rlhf
