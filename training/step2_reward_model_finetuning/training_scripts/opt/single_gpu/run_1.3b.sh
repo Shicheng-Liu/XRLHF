@@ -3,14 +3,19 @@
 set -x
 export HF_DATASETS_OFFLINE=1
 export TRANSFORMERS_OFFLINE=1
+export OMP_NUM_THREADS=4
+export MKL_NUM_THREADS=4
+export NUMEXPR_NUM_THREADS=4
+export OPENBLAS_NUM_THREADS=4
+export RAYON_NUM_THREADS=20
+export TOKENIZERS_PARALLELISM=False
 
-
-DEV=6
+DEV=0,3
 PORT=1235
 OUTPUT=$1
 ZERO_STAGE=$2
 MODEL_NAME="facebook/opt-1.3b"
-DATA_PATH="/gpuhome/hbz5148/workspace/siyuan/rlhf/dataset/Dahoas/full-hh-rlhf"
+DATA_PATH="/gpu02home/hbz5148/workspace/siyuan/rlhf/dataset/Dahoas/full-hh-rlhf"
 
 if [ "$OUTPUT" == "" ]; then
     OUTPUT=./output/opt-1.3b/full-hh-rlhf
