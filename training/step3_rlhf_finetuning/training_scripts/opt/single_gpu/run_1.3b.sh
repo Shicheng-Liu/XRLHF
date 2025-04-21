@@ -16,7 +16,7 @@ ACTOR_ZERO_STAGE=$3
 CRITIC_ZERO_STAGE=$4
 OUTPUT=$5
 if [ "$OUTPUT" == "" ]; then
-    OUTPUT=./output/opt-1.3b/full-hh-rlhf
+    OUTPUT=./output/opt-350m/full-hh-rlhf
 fi
 if [ "$ACTOR_ZERO_STAGE" == "" ]; then
     ACTOR_ZERO_STAGE=0
