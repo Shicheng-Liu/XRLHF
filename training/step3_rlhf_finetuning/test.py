@@ -193,7 +193,7 @@ def print_utils(gen_output):
         print()
 
 
-def prompt_eval(args, model_baseline, model_fintuned, model_rlhf, tokenizer, reward_model, device, prompts):
+def prompt_eval(args, model_baseline, model_fintuned, model_rlhf, tokenizer, reward_model, reward_tokenizer, device, prompts):
     reward_base = []
     reward_finetune = []
     reward_rlhf = []
@@ -221,7 +221,7 @@ def prompt_eval(args, model_baseline, model_fintuned, model_rlhf, tokenizer, rew
                           max_new_tokens=args.max_new_tokens)
         base_response.append(r_base[0])
         #print_utils(r_base)
-        base_batch = prepare_singlesample(prompt, r_base, tokenizer, max_seq_len=512, end_of_conversation_token=args.end_of_conversation_token)
+        base_batch = prepare_singlesample(prompt, r_base, reward_tokenizer, max_seq_len=512, end_of_conversation_token=args.end_of_conversation_token)
         base_batch = to_device(base_batch, device)
         reward_model.eval()
         # Run inference
@@ -241,7 +241,7 @@ def prompt_eval(args, model_baseline, model_fintuned, model_rlhf, tokenizer, rew
                                 max_new_tokens=args.max_new_tokens)
         #print_utils(r_finetune_g)
         finetune_response.append(r_finetune_g[0])
-        finetune_batch = prepare_singlesample(prompt, r_finetune_g, tokenizer, max_seq_len=512, end_of_conversation_token=args.end_of_conversation_token)
+        finetune_batch = prepare_singlesample(prompt, r_finetune_g, reward_tokenizer, max_seq_len=512, end_of_conversation_token=args.end_of_conversation_token)
         finetune_batch = to_device(finetune_batch, device)
         
         # Run inference
@@ -261,7 +261,7 @@ def prompt_eval(args, model_baseline, model_fintuned, model_rlhf, tokenizer, rew
                                 max_new_tokens=args.max_new_tokens)
         #print_utils(r_rlhf_g)
         rlhf_response.append(r_rlhf_g[0])
-        rlhf_batch = prepare_singlesample(prompt, r_rlhf_g, tokenizer, max_seq_len=512, end_of_conversation_token=args.end_of_conversation_token)
+        rlhf_batch = prepare_singlesample(prompt, r_rlhf_g, reward_tokenizer, max_seq_len=512, end_of_conversation_token=args.end_of_conversation_token)
         rlhf_batch = to_device(rlhf_batch, device)
         
         # Run inference
@@ -320,9 +320,10 @@ def prompt_eval(args, model_baseline, model_fintuned, model_rlhf, tokenizer, rew
         #                                             num_return_sequences=args.num_return_sequences,
         #                                             max_new_tokens=args.max_new_tokens)
         # print_utils(r_finetune_c)
-        print("====================prompt end=============================")
-        print()
-        print()
+        #print("====================prompt end=============================")
+        #print()
+        #print()
+        print("====================test reward=============================")
         return reward_base, reward_finetune, reward_rlhf
 
 
@@ -351,7 +352,7 @@ def main():
     args.end_of_conversation_token = "<|endoftext|>"
     additional_special_tokens = args.end_of_conversation_token if args.add_eot_token else None
 
-    reward_model, _ = load_stuff(args.model_name_or_path_reward,
+    reward_model, reward_tokenizer = load_stuff(args.model_name_or_path_reward,
                                      args.num_padding_at_beginning,
                                      additional_special_tokens)
 
@@ -368,7 +369,7 @@ def main():
     ds = load_dataset("json", data_files=args.data_path)["train"]
     prompts = ds["prompt"]
 
-    reward_base, reward_finetune, reward_rlhf = prompt_eval(args, model_baseline, model_fintuned, model_rlhf, tokenizer, reward_model, device, prompts)
+    reward_base, reward_finetune, reward_rlhf = prompt_eval(args, model_baseline, model_fintuned, model_rlhf, tokenizer, reward_model, reward_tokenizer, device, prompts)
     print("reward for base model",np.mean(reward_base))
     print("reward for SFT model",np.mean(reward_finetune))
     print("reward for rlhf model",np.mean(reward_rlhf))
