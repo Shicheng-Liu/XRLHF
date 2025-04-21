@@ -82,6 +82,11 @@ def get_tokenizer(model_name_or_path, fast_tokenizer=True):
             # tokenizer.add_special_tokens({'pad_token': tokenizer.eos_token})
             tokenizer.add_special_tokens({'pad_token': '[PAD]'})
             tokenizer.padding_side = 'right'
+    elif "pythia" in model_name_or_path.lower() or "gpt-neox" in model_name_or_path.lower():
+        from transformers.models.gpt_neox import GPTNeoXTokenizer
+        tokenizer = GPTNeoXTokenizer.from_pretrained(model_name_or_path)
+        tokenizer.pad_token = tokenizer.eos_token
+        tokenizer.padding_side = 'right'
     else:
         tokenizer = AutoTokenizer.from_pretrained(
             model_name_or_path, fast_tokenizer=fast_tokenizer)
