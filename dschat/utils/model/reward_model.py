@@ -63,7 +63,7 @@ class RewardModel(nn.Module):
             **kwargs)
 
         hidden_states = transformer_outputs[0]
-        rewards = self.v_head(hidden_states.float()).squeeze(-1)
+        rewards = self.v_head(hidden_states).squeeze(-1)
         chosen_mean_scores = []
         rejected_mean_scores = []
 
@@ -148,7 +148,7 @@ class RewardModel(nn.Module):
             use_cache=use_cache,
             **kwargs)
         hidden_states = transformer_outputs[0]
-        values = self.v_head(hidden_states.float()).squeeze(-1)
+        values = self.v_head(hidden_states).squeeze(-1)
         if return_value_only:
             return values
         else:
