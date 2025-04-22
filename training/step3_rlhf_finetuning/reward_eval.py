@@ -184,7 +184,7 @@ def main():
             else:
                 base_outputs = reward_model(**base_batch)
                 reward_base.append(base_outputs.logits.squeeze(-1).float().cpu().numpy())
-        print('based reward', base_outputs.logits[..., 1].float().cpu().numpy())
+        print('based reward', base_outputs.logits.squeeze(-1).float().cpu().numpy())
         
         finetune_batch = prepare_singlesample(prompt, sft_response, reward_tokenizer, max_seq_len=512, end_of_conversation_token=args.end_of_conversation_token)
         finetune_batch = to_device(finetune_batch, device)
@@ -201,7 +201,7 @@ def main():
                 finetune_outputs = reward_model(**finetune_batch)
                 reward_finetune.append(finetune_outputs.logits.squeeze(-1).float().cpu().numpy())
                 
-        print('finetune reward', finetune_outputs.logits[..., 1].float().cpu().numpy())
+        print('finetune reward', finetune_outputs.logits.squeeze(-1).float().cpu().numpy())
         
 
         
@@ -220,7 +220,7 @@ def main():
                 rlhf_outputs = reward_model(**rlhf_batch)
                 reward_rlhf.append(rlhf_outputs.logits.squeeze(-1).float().cpu().numpy())
 
-        print('rlhf reward', rlhf_outputs.logits[..., 1].float().cpu().numpy())
+        print('rlhf reward', rlhf_outputs.logits.squeeze(-1).float().cpu().numpy())
 
     print("reward for base model",np.mean(reward_base))
     print("reward for SFT model",np.mean(reward_finetune))
