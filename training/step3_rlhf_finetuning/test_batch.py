@@ -7,6 +7,7 @@ import logging
 import torch
 import json
 import numpy as np
+from typing import List
 from transformers import AutoModelForCausalLM, AutoTokenizer, AutoModelForSequenceClassification
 
 from dschat.utils.model.model_utils import create_hf_model, create_critic_model
