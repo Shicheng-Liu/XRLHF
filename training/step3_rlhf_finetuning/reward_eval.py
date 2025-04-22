@@ -189,11 +189,8 @@ def main():
     reward_base_list = []
     reward_finetune_list = []
     reward_rlhf_list = []
-    i = 0
     for prompt, base_response, sft_response, rlhf_response in tqdm(zip(prompts, response_base, response_sft, response_rlhf),total=len(prompts),desc="Evaulation process"):
-        if i > 2:
-            break
-        i += 1
+        
         # print('base_response',base_response)
         # print('sft_response',sft_response)
         # print('rlhf_response',rlhf_response)
