@@ -391,7 +391,7 @@ def main():
     # Finetuned models have less such issue. Thus following prompts all end with ":"
     # to make it a more meaningful comparison.
     ds = load_dataset("json", data_files=args.data_path)["train"]
-    prompts = ds["prompt"][:500]
+    prompts = ds["prompt"][:10]
 
     reward_base, reward_finetune, reward_rlhf = prompt_eval(args, model_baseline, model_fintuned, model_rlhf, tokenizer, reward_model, reward_tokenizer, device, prompts)
     print("reward for base model",np.mean(reward_base))
