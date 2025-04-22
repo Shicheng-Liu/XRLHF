@@ -14,7 +14,7 @@ DEV=0,3
 PORT=1236
 BASELINE_ACTOR_MODEL_PATH=facebook/opt-1.3b
 ACTOR_MODEL_PATH=~/workspace/siyuan/rlhf/training/step1_supervised_finetuning/output/opt-1.3b/full-hh-rlhf
-CRITIC_MODEL_PATH=~/workspace/siyuan/rlhf/training/step2_reward_model_finetuning/output/opt-1.3b/full-hh-rlhf
+CRITIC_MODEL_PATH=~/workspace/siyuan/rlhf/training/step2_reward_model_finetuning/output/opt-350m/full-hh-rlhf
 DATA_PATH="/gpuhome/hbz5148/workspace/siyuan/rlhf/dataset/Dahoas/full-hh-rlhf"
 
 
@@ -22,7 +22,7 @@ ACTOR_ZERO_STAGE=$3
 CRITIC_ZERO_STAGE=$4
 OUTPUT=$5
 if [ "$OUTPUT" == "" ]; then
-    OUTPUT=./output/opt-1.3b/full-hh-rlhf
+    OUTPUT=./output/opt-350m/full-hh-rlhf
 fi
 if [ "$ACTOR_ZERO_STAGE" == "" ]; then
     ACTOR_ZERO_STAGE=0
