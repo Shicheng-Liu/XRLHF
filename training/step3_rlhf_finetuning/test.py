@@ -212,7 +212,10 @@ def prompt_eval(args, model_baseline, model_fintuned, model_rlhf, tokenizer, rew
     base_response = []
     finetune_response = []
     rlhf_response = []
+    i = 0
     for prompt in prompts:
+        print('prompt', i+1)
+        i += 1
         inputs = tokenizer(prompt, return_tensors="pt", padding=True, truncation=True).to(device)
         
         # Ensure the pad_token is set, especially if it's the same as eos_token
