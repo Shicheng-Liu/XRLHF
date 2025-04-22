@@ -249,7 +249,7 @@ def prompt_eval(args, model_baseline, model_fintuned, model_rlhf, tokenizer, rew
                                 num_beams=1,
                                 num_return_sequences=args.num_return_sequences,
                                 max_new_tokens=args.max_new_tokens)
-        print_utils(r_finetune_g)
+        #print_utils(r_finetune_g)
         finetune_response.append(r_finetune_g[0])
         finetune_batch = prepare_singlesample(prompt, r_finetune_g, reward_tokenizer, max_seq_len=512, end_of_conversation_token=args.end_of_conversation_token)
         finetune_batch = to_device(finetune_batch, device)
@@ -274,7 +274,7 @@ def prompt_eval(args, model_baseline, model_fintuned, model_rlhf, tokenizer, rew
                                 num_beams=1,
                                 num_return_sequences=args.num_return_sequences,
                                 max_new_tokens=args.max_new_tokens)
-        print_utils(r_rlhf_g)
+        #print_utils(r_rlhf_g)
         rlhf_response.append(r_rlhf_g[0])
         rlhf_batch = prepare_singlesample(prompt, r_rlhf_g, reward_tokenizer, max_seq_len=512, end_of_conversation_token=args.end_of_conversation_token)
         rlhf_batch = to_device(rlhf_batch, device)
