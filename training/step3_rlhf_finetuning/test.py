@@ -264,7 +264,7 @@ def prompt_eval(args, model_baseline, model_fintuned, model_rlhf, tokenizer, rew
                 finetune_outputs = reward_model(**finetune_batch)
                 reward_finetune.append(finetune_outputs.logits.squeeze(-1).float().cpu().numpy())
                 
-        print("finetune answer score: ", finetune_outputs["chosen_end_scores"].item())
+        #print("finetune answer score: ", finetune_outputs["chosen_end_scores"].item())
         
 
         print("==========rlhf: Greedy=========")
@@ -287,7 +287,7 @@ def prompt_eval(args, model_baseline, model_fintuned, model_rlhf, tokenizer, rew
             else:
                 rlhf_outputs = reward_model(**rlhf_batch)
                 reward_rlhf.append(rlhf_outputs.logits.squeeze(-1).float().cpu().numpy())
-        print("rlhf answer score: ", rlhf_outputs["chosen_end_scores"].item())
+        #print("rlhf answer score: ", rlhf_outputs["chosen_end_scores"].item())
         
 
     test_results = []
