@@ -124,9 +124,10 @@ def prepare_singlesample(prompt,
 
     return batch
 
-def PKU_reward(prompt,response,reward_model,reward_tokenizer):
+def PKU_reward(prompt,response,reward_model,reward_tokenizer,device):
     input = prompt + response
     input_ids = reward_tokenizer(input,return_tensors='pt')
+    input_ids = to_device(input_ids,device)
     output = reward_model(**input_ids)
     return output.end_scores.item()
 
@@ -143,7 +144,7 @@ def get_reward(prompt,response,reward_model,reward_tokenizer,device,end_of_conve
     if "opt" in reward_name:
         reward = opt_reward(prompt,response,reward_model,reward_tokenizer,device,end_of_conversation_token,num_padding_at_beginning)
     if "PKU" in reward_name:
-        reward = PKU_reward(prompt,response,reward_model,reward_tokenizer)
+        reward = PKU_reward(prompt,response,reward_model,reward_tokenizer,device)
     return reward
 
 
