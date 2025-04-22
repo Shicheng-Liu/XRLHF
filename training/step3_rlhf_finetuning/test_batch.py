@@ -155,6 +155,47 @@ def prepare_singlesample(prompt,
 
     return batch
 
+def prepare_batch_samples(
+    prompts: List[str],
+    responses: List[List[str]],
+    tokenizer,
+    max_seq_len: int = 512,
+    end_of_conversation_token: str = "<|endoftext|>"
+):
+    """
+    Batched version of prepare_singlesample.
+
+    Args:
+        prompts: List of prompt strings.
+        responses: List of list of responses (only the first response in each will be used).
+        tokenizer: HuggingFace tokenizer.
+        max_seq_len: Maximum total sequence length.
+        end_of_conversation_token: Token appended to the end of responses.
+
+    Returns:
+        A dictionary with keys 'input_ids' and 'attention_mask', both torch tensors.
+    """
+    texts = [
+        prompt + response[0] + end_of_conversation_token
+        for prompt, response in zip(prompts, responses)
+    ]
+
+    tokenized = tokenizer(
+        texts,
+        max_length=max_seq_len,
+        padding="max_length",
+        truncation=True,
+        return_tensors="pt"
+    )
+
+    batch = {
+        "input_ids": tokenized["input_ids"],
+        "attention_mask": tokenized["attention_mask"]
+    }
+
+    return batch
+
+
 
 def generate(model,
              tokenizer,
@@ -234,15 +275,14 @@ def prompt_eval(args, model_baseline, model_fintuned, model_rlhf, tokenizer, rew
                           num_return_sequences=args.num_return_sequences,
                           max_new_tokens=args.max_new_tokens)
         
-        base_response.extend([item[0] for item in r_base])
-        #print_utils(r_base)
-        base_batch_list = [
-            prepare_singlesample(p, [r], reward_tokenizer,
-                                max_seq_len=512,
-                                end_of_conversation_token=args.end_of_conversation_token)
-            for p, r in zip(prompt_batch, r_base)
-        ]
-        base_batch = to_device(default_collate(base_batch_list), device)
+        base_batch = prepare_batch_samples(
+            prompts=prompt_batch,  # List of 8 prompts
+            responses=r_base,       # List of responses, e.g., [["response1"], ["response2"], ..., ["response8"]]
+            tokenizer=reward_tokenizer,
+            max_seq_len=512,
+            end_of_conversation_token="<|endoftext|>"
+        )
+        base_batch = to_device(base_batch, device)
         
         reward_model.eval()
         # Run inference
@@ -266,15 +306,14 @@ def prompt_eval(args, model_baseline, model_fintuned, model_rlhf, tokenizer, rew
                                 num_return_sequences=args.num_return_sequences,
                                 max_new_tokens=args.max_new_tokens)
         #print_utils(r_finetune_g)
-        finetune_response.extend([item[0] for item in r_finetune_g])
-        finetune_batch_list = [
-            prepare_singlesample(p, [r], reward_tokenizer,
-                                max_seq_len=512,
-                                end_of_conversation_token=args.end_of_conversation_token)
-            for p, r in zip(prompt_batch, r_finetune_g)
-        ]
-        
-        finetune_batch = to_device(default_collate(finetune_batch_list), device)
+        finetune_batch = prepare_batch_samples(
+            prompts=prompt_batch,  # List of 8 prompts
+            responses=r_finetune_g,       # List of responses, e.g., [["response1"], ["response2"], ..., ["response8"]]
+            tokenizer=reward_tokenizer,
+            max_seq_len=512,
+            end_of_conversation_token="<|endoftext|>"
+        )
+        finetune_batch = to_device(finetune_batch, device)
         
         # Run inference
         with torch.no_grad():
@@ -297,15 +336,14 @@ def prompt_eval(args, model_baseline, model_fintuned, model_rlhf, tokenizer, rew
                                 num_return_sequences=args.num_return_sequences,
                                 max_new_tokens=args.max_new_tokens)
         #print_utils(r_rlhf_g)
-        rlhf_response.extend([item[0] for item in r_rlhf_g])
-        rlhf_batch_list = [
-            prepare_singlesample(p, [r], reward_tokenizer,
-                                max_seq_len=512,
-                                end_of_conversation_token=args.end_of_conversation_token)
-            for p, r in zip(prompt_batch, r_rlhf_g)
-        ]
-        
-        rlhf_batch = to_device(default_collate(rlhf_batch_list), device)
+        rlhf_batch = prepare_batch_samples(
+            prompts=prompt_batch,  # List of 8 prompts
+            responses=r_rlhf_g,       # List of responses, e.g., [["response1"], ["response2"], ..., ["response8"]]
+            tokenizer=reward_tokenizer,
+            max_seq_len=512,
+            end_of_conversation_token="<|endoftext|>"
+        )
+        rlhf_batch = to_device(rlhf_batch, device)
         
         # Run inference
         with torch.no_grad():
