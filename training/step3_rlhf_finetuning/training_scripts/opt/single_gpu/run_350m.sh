@@ -10,7 +10,7 @@ export OPENBLAS_NUM_THREADS=4
 export RAYON_NUM_THREADS=20
 export TOKENIZERS_PARALLELISM=False
 
-DEV=0,3
+DEV=5,6
 PORT=1236
 BASELINE_ACTOR_MODEL_PATH=facebook/opt-1.3b
 ACTOR_MODEL_PATH=~/workspace/siyuan/rlhf/training/step1_supervised_finetuning/output/opt-1.3b/full-hh-rlhf
