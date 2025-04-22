@@ -242,7 +242,7 @@ def prompt_eval(args, model_baseline, model_fintuned, model_rlhf, tokenizer, rew
         #print("baseline answer score: ", base_outputs["chosen_end_scores"].item())
         
 
-        print("==========finetune: Greedy=========")
+        #print("==========finetune: Greedy=========")
         r_finetune_g = generate(model_fintuned,
                                 tokenizer,
                                 inputs,
@@ -267,7 +267,7 @@ def prompt_eval(args, model_baseline, model_fintuned, model_rlhf, tokenizer, rew
         #print("finetune answer score: ", finetune_outputs["chosen_end_scores"].item())
         
 
-        print("==========rlhf: Greedy=========")
+        #print("==========rlhf: Greedy=========")
         r_rlhf_g = generate(model_rlhf,
                                 tokenizer,
                                 inputs,
