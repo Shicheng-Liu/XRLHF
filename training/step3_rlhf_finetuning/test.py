@@ -38,16 +38,16 @@ def parse_args():
         required=True,
     )
     parser.add_argument(
-        "--model_name_or_path_reward",
-        type=str,
-        help="Path to reward model",
-        required=True,
-    )
-    parser.add_argument(
         "--data_path",
         type=str,
         help="Path to test prompts",
         required=True,
+    )
+    parser.add_argument(
+        "--batch_size",
+        type=int,
+        default=4,
+        help='batch size',
     )
     parser.add_argument(
         "--num_padding_at_beginning",
@@ -106,42 +106,6 @@ def parse_args():
 
     return args
 
-
-def load_stuff(model_name_or_path, num_padding_at_beginning,
-               additional_special_tokens):
-
-    tokenizer = load_hf_tokenizer(model_name_or_path,
-                                  fast_tokenizer=True,
-                                  add_special_tokens=additional_special_tokens)
-    tokenizer.pad_token = tokenizer.eos_token
-    model = create_critic_model(model_name_or_path,
-                                tokenizer,
-                                None,
-                                num_padding_at_beginning,
-                                rlhf_training=True,
-                                dropout=0.)
-
-    return model, tokenizer
-
-def prepare_singlesample(prompt,
-                         good_ans,
-                         tokenizer,
-                         max_seq_len=512,
-                         end_of_conversation_token="<|endoftext|>"):
-    chosen_sentence = prompt + good_ans[0] + end_of_conversation_token
-    chosen_token = tokenizer(chosen_sentence,
-                             max_length=max_seq_len,
-                             padding="max_length",
-                             truncation=True,
-                             return_tensors="pt")
-
-    batch = {}
-    batch["input_ids"] = chosen_token["input_ids"]
-    batch["attention_mask"] = chosen_token["attention_mask"]
-
-    return batch
-
-
 def generate(model,
              tokenizer,
              inputs,
@@ -192,10 +156,8 @@ def print_utils(gen_output):
         print()
 
 
-def prompt_eval(args, model_baseline, model_fintuned, model_rlhf, tokenizer, reward_model, reward_tokenizer, device, prompts):
-    reward_base = []
-    reward_finetune = []
-    reward_rlhf = []
+def prompt_eval(args, model_baseline, model_fintuned, model_rlhf, tokenizer, device, prompts):
+
     base_response = []
     finetune_response = []
     rlhf_response = []
@@ -220,21 +182,6 @@ def prompt_eval(args, model_baseline, model_fintuned, model_rlhf, tokenizer, rew
                           max_new_tokens=args.max_new_tokens)
         base_response.append(r_base[0])
         #print_utils(r_base)
-        base_batch = prepare_singlesample(prompt, r_base, reward_tokenizer, max_seq_len=512, end_of_conversation_token=args.end_of_conversation_token)
-        base_batch = to_device(base_batch, device)
-        reward_model.eval()
-        # Run inference
-        with torch.no_grad():
-            if "opt" in args.model_name_or_path_reward:
-                base_outputs = reward_model.forward_value(**base_batch, prompt_length=max(2, args.num_padding_at_beginning))
-                reward_base.append(base_outputs["chosen_end_scores"].item())
-                
-            else:
-                base_outputs = reward_model(**base_batch)
-                reward_base.append(base_outputs.logits.squeeze(-1).float().cpu().numpy())
-                
-        #print("baseline answer score: ", base_outputs["chosen_end_scores"].item())
-        
 
         #print("==========finetune: Greedy=========")
         r_finetune_g = generate(model_fintuned,
@@ -245,20 +192,6 @@ def prompt_eval(args, model_baseline, model_fintuned, model_rlhf, tokenizer, rew
                                 max_new_tokens=args.max_new_tokens)
         #print_utils(r_finetune_g)
         finetune_response.append(r_finetune_g[0])
-        finetune_batch = prepare_singlesample(prompt, r_finetune_g, reward_tokenizer, max_seq_len=512, end_of_conversation_token=args.end_of_conversation_token)
-        finetune_batch = to_device(finetune_batch, device)
-        
-        # Run inference
-        with torch.no_grad():
-            if "opt" in args.model_name_or_path_reward:
-                finetune_outputs = reward_model.forward_value(**finetune_batch, prompt_length=max(2, args.num_padding_at_beginning))
-                reward_finetune.append(finetune_outputs["chosen_end_scores"].item())
-                
-            else:
-                finetune_outputs = reward_model(**finetune_batch)
-                reward_finetune.append(finetune_outputs.logits.squeeze(-1).float().cpu().numpy())
-                
-        #print("finetune answer score: ", finetune_outputs["chosen_end_scores"].item())
         
 
         #print("==========rlhf: Greedy=========")
@@ -270,18 +203,6 @@ def prompt_eval(args, model_baseline, model_fintuned, model_rlhf, tokenizer, rew
                                 max_new_tokens=args.max_new_tokens)
         #print_utils(r_rlhf_g)
         rlhf_response.append(r_rlhf_g[0])
-        rlhf_batch = prepare_singlesample(prompt, r_rlhf_g, reward_tokenizer, max_seq_len=512, end_of_conversation_token=args.end_of_conversation_token)
-        rlhf_batch = to_device(rlhf_batch, device)
-        
-        # Run inference
-        with torch.no_grad():
-            if "opt" in args.model_name_or_path_reward:
-                rlhf_outputs = reward_model.forward_value(**rlhf_batch, prompt_length=max(2, args.num_padding_at_beginning))
-                reward_rlhf.append(rlhf_outputs["chosen_end_scores"].item())
-            else:
-                rlhf_outputs = reward_model(**rlhf_batch)
-                reward_rlhf.append(rlhf_outputs.logits.squeeze(-1).float().cpu().numpy())
-        #print("rlhf answer score: ", rlhf_outputs["chosen_end_scores"].item())
         
 
     test_results = []
@@ -292,7 +213,7 @@ def prompt_eval(args, model_baseline, model_fintuned, model_rlhf, tokenizer, rew
             "response_sft": s,
             "response_rlhf": r
         })
-    with open("test_result.json","w") as f:
+    with open(f"{args.reward_model_name}_test_result.json","w") as f:
         json.dump(test_results,f,indent=4)
         # Note: we use the above simplest greedy search as the baseline. Users can also use other baseline methods,
         # such as beam search, multinomial sampling, and beam-search multinomial sampling.
@@ -335,8 +256,7 @@ def prompt_eval(args, model_baseline, model_fintuned, model_rlhf, tokenizer, rew
         #print("====================prompt end=============================")
         #print()
         #print()
-    print("====================test reward=============================")
-    return reward_base, reward_finetune, reward_rlhf
+
 
 
 def main():
@@ -361,23 +281,9 @@ def main():
                                      args.model_name_or_path_rlhf,
                                      tokenizer, None)
     
-    args.end_of_conversation_token = "<|endoftext|>"
-    additional_special_tokens = args.end_of_conversation_token if args.add_eot_token else None
-
-    if "opt" in args.model_name_or_path_reward:
-        reward_model, reward_tokenizer = load_stuff(args.model_name_or_path_reward,
-                                        args.num_padding_at_beginning,
-                                        additional_special_tokens)
-    else:
-        #from huggingface_hub import login
-        #login(token="")
-        reward_tokenizer = AutoTokenizer.from_pretrained(args.model_name_or_path_reward)
-        reward_model = AutoModelForSequenceClassification.from_pretrained(args.model_name_or_path_reward, device_map="auto", torch_dtype="auto")
-
     model_baseline.to(device)
     model_fintuned.to(device)
     model_rlhf.to(device)
-    reward_model.to(device)
     
 
     # One observation: if the prompt ends with a space " ", there is a high chance that
@@ -387,10 +293,7 @@ def main():
     ds = load_dataset("json", data_files=args.data_path)["train"]
     prompts = ds["prompt"]
 
-    reward_base, reward_finetune, reward_rlhf = prompt_eval(args, model_baseline, model_fintuned, model_rlhf, tokenizer, reward_model, reward_tokenizer, device, prompts)
-    print("reward for base model",np.mean(reward_base))
-    print("reward for SFT model",np.mean(reward_finetune))
-    print("reward for rlhf model",np.mean(reward_rlhf))
+    prompt_eval(args, model_baseline, model_fintuned, model_rlhf, tokenizer, device, prompts)
 
 
 if __name__ == "__main__":

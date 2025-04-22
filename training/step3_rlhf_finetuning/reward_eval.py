@@ -189,6 +189,7 @@ def main():
     reward_base_list = []
     reward_finetune_list = []
     reward_rlhf_list = []
+    win_rate_list = []
     for prompt, base_response, sft_response, rlhf_response in tqdm(zip(prompts, response_base, response_sft, response_rlhf),total=len(prompts),desc="Evaulation process"):
         
         # print('base_response',base_response)
@@ -202,11 +203,16 @@ def main():
         reward_base_list.append(base_reward)
         reward_finetune_list.append(finetune_reward)
         reward_rlhf_list.append(rlhf_reward)
+        if rlhf_reward > finetune_reward:
+            win_rate_list.append(1)
+        else:
+            win_rate_list.append(0)
         
 
     print("reward for base model",np.mean(reward_base_list))
     print("reward for SFT model",np.mean(reward_finetune_list))
     print("reward for rlhf model",np.mean(reward_rlhf_list))
+    print("win rate",1.0*sum(win_rate_list)/len(win_rate_list))
 
 
 if __name__ == "__main__":
