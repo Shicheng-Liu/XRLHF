@@ -8,7 +8,7 @@ import torch
 import json
 import numpy as np
 from transformers import AutoModelForCausalLM, AutoTokenizer, AutoModelForSequenceClassification
-
+from tqdm import tqdm
 from dschat.utils.model.model_utils import create_hf_model, create_critic_model
 from dschat.utils.utils import to_device, load_hf_tokenizer
 from deepspeed import get_accelerator
@@ -212,10 +212,9 @@ def prompt_eval(args, model_baseline, model_fintuned, model_rlhf, tokenizer, rew
     base_response = []
     finetune_response = []
     rlhf_response = []
-    i = 0
-    for prompt in prompts:
-        print('prompt', i+1)
-        i += 1
+    
+    for prompt in tqdm(prompts,desc="processing prompts"):
+
         inputs = tokenizer(prompt, return_tensors="pt", padding=True, truncation=True).to(device)
         
         # Ensure the pad_token is set, especially if it's the same as eos_token
