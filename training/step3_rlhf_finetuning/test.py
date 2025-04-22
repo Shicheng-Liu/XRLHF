@@ -107,6 +107,13 @@ def parse_args():
         "--add_eot_token",
         action='store_true',
         help="Add <|endoftext|> as additional special token to tokenizer")
+    parser.add_argument(
+        "--batch_size",
+        type=int,
+        default=8,
+        help='batch size',
+    )
+
 
     args = parser.parse_args()
 
