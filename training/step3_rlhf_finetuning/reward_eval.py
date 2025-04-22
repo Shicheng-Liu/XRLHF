@@ -124,6 +124,29 @@ def prepare_singlesample(prompt,
 
     return batch
 
+def PKU_reward(prompt,response,reward_model,reward_tokenizer):
+    input = prompt + response
+    input_ids = reward_tokenizer(input,return_tensors='pt')
+    output = reward_model(**input_ids)
+    return output.end_scores.item()
+
+def opt_reward(prompt,response,reward_model,reward_tokenizer,device,end_of_conversation_token,num_padding_at_beginning):
+    batch = prepare_singlesample(prompt, response, reward_tokenizer, max_seq_len=512, end_of_conversation_token=end_of_conversation_token)
+    batch = to_device(batch, device)
+    reward_model.eval()
+        # Run inference
+    with torch.no_grad():
+        outputs = reward_model.forward_value(**batch, prompt_length=max(2, num_padding_at_beginning))
+        return outputs["chosen_end_scores"].item()
+       
+def get_reward(prompt,response,reward_model,reward_tokenizer,device,end_of_conversation_token,num_padding_at_beginning,reward_name):
+    if "opt" in reward_name:
+        reward = opt_reward(prompt,response,reward_model,reward_tokenizer,device,end_of_conversation_token,num_padding_at_beginning)
+    if "PKU" in reward_name:
+        reward = PKU_reward(prompt,response,reward_model,reward_tokenizer)
+    return reward
+
+
 
 
 def main():
@@ -138,6 +161,10 @@ def main():
         reward_model, reward_tokenizer = load_stuff(args.model_name_or_path_reward,
                                         args.num_padding_at_beginning,
                                         additional_special_tokens)
+    elif "PKU-Alignment" in args.model_name_or_path_reward:
+        from safe_rlhf.models import AutoModelForScore
+        reward_model = AutoModelForScore.from_pretrained(args.model_name_or_path_reward, torch_dtype=torch.bfloat16, device_map='auto')
+        reward_tokenizer = AutoTokenizer.from_pretrained(args.model_name_or_path_reward)
     else:
         #from huggingface_hub import login
         #login(token="")
@@ -158,73 +185,30 @@ def main():
 
     
     
-    reward_base = []
-    reward_finetune = []
-    reward_rlhf = []
+    reward_base_list = []
+    reward_finetune_list = []
+    reward_rlhf_list = []
     i = 0
     for prompt, base_response, sft_response, rlhf_response in tqdm(zip(prompts, response_base, response_sft, response_rlhf),total=len(prompts),desc="Evaulation process"):
         if i > 2:
             break
         i += 1
-        print('base_response',base_response)
-        print('sft_response',sft_response)
-        print('rlhf_response',rlhf_response)
-        
-        base_batch = prepare_singlesample(prompt, base_response, reward_tokenizer, max_seq_len=512, end_of_conversation_token=args.end_of_conversation_token)
-        base_batch = to_device(base_batch, device)
-        reward_model.eval()
-        # Run inference
-        with torch.no_grad():
-            if "opt" in args.model_name_or_path_reward:
-                base_outputs = reward_model.forward_value(**base_batch, prompt_length=max(2, args.num_padding_at_beginning))
-                reward_base.append(base_outputs["chosen_end_scores"].item())
-            elif "beaver-7b-v3.0-reward" in args.model_name_or_path_reward:
-                base_outputs = reward_model(**base_batch)
-                reward_base.append(base_outputs.logits[..., 1].float().cpu().numpy())
-            else:
-                base_outputs = reward_model(**base_batch)
-                reward_base.append(base_outputs.logits.squeeze(-1).float().cpu().numpy())
-        print('based reward', base_outputs.logits.squeeze(-1).float().cpu().numpy())
-        
-        finetune_batch = prepare_singlesample(prompt, sft_response, reward_tokenizer, max_seq_len=512, end_of_conversation_token=args.end_of_conversation_token)
-        finetune_batch = to_device(finetune_batch, device)
-        
-        # Run inference
-        with torch.no_grad():
-            if "opt" in args.model_name_or_path_reward:
-                finetune_outputs = reward_model.forward_value(**finetune_batch, prompt_length=max(2, args.num_padding_at_beginning))
-                reward_finetune.append(finetune_outputs["chosen_end_scores"].item())
-            elif "beaver-7b-v3.0-reward" in args.model_name_or_path_reward:
-                finetune_outputs = reward_model(**finetune_batch)
-                reward_finetune.append(finetune_outputs.logits[..., 1].float().cpu().numpy())  
-            else:
-                finetune_outputs = reward_model(**finetune_batch)
-                reward_finetune.append(finetune_outputs.logits.squeeze(-1).float().cpu().numpy())
-                
-        print('finetune reward', finetune_outputs.logits.squeeze(-1).float().cpu().numpy())
+        # print('base_response',base_response)
+        # print('sft_response',sft_response)
+        # print('rlhf_response',rlhf_response)
+
+        base_reward = get_reward(prompt,base_response,reward_model,reward_tokenizer,device,args.end_of_conversation_token,args.num_padding_at_beginning,args.model_name_or_path_reward)
+        finetune_reward = get_reward(prompt,sft_response,reward_model,reward_tokenizer,device,args.end_of_conversation_token,args.num_padding_at_beginning,args.model_name_or_path_reward)
+        rlhf_reward = get_reward(prompt,rlhf_response,reward_model,reward_tokenizer,device,args.end_of_conversation_token,args.num_padding_at_beginning,args.model_name_or_path_reward)
+
+        reward_base_list.append(base_reward)
+        reward_finetune_list.append(finetune_reward)
+        reward_rlhf_list.append(rlhf_reward)
         
 
-        
-        rlhf_batch = prepare_singlesample(prompt, rlhf_response, reward_tokenizer, max_seq_len=512, end_of_conversation_token=args.end_of_conversation_token)
-        rlhf_batch = to_device(rlhf_batch, device)
-        
-        # Run inference
-        with torch.no_grad():
-            if "opt" in args.model_name_or_path_reward:
-                rlhf_outputs = reward_model.forward_value(**rlhf_batch, prompt_length=max(2, args.num_padding_at_beginning))
-                reward_rlhf.append(rlhf_outputs["chosen_end_scores"].item())
-            elif "beaver-7b-v3.0-reward" in args.model_name_or_path_reward:
-                rlhf_outputs = reward_model(**rlhf_batch)
-                reward_rlhf.append(rlhf_outputs.logits[..., 1].float().cpu().numpy())
-            else:
-                rlhf_outputs = reward_model(**rlhf_batch)
-                reward_rlhf.append(rlhf_outputs.logits.squeeze(-1).float().cpu().numpy())
-
-        print('rlhf reward', rlhf_outputs.logits.squeeze(-1).float().cpu().numpy())
-
-    print("reward for base model",np.mean(reward_base))
-    print("reward for SFT model",np.mean(reward_finetune))
-    print("reward for rlhf model",np.mean(reward_rlhf))
+    print("reward for base model",np.mean(reward_base_list))
+    print("reward for SFT model",np.mean(reward_finetune_list))
+    print("reward for rlhf model",np.mean(reward_rlhf_list))
 
 
 if __name__ == "__main__":
