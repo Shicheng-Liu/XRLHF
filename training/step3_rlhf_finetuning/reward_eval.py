@@ -111,7 +111,7 @@ def prepare_singlesample(prompt,
                          tokenizer,
                          max_seq_len=512,
                          end_of_conversation_token="<|endoftext|>"):
-    chosen_sentence = prompt + good_ans[0] + end_of_conversation_token
+    chosen_sentence = prompt + good_ans + end_of_conversation_token
     chosen_token = tokenizer(chosen_sentence,
                              max_length=max_seq_len,
                              padding="max_length",
@@ -124,55 +124,6 @@ def prepare_singlesample(prompt,
 
     return batch
 
-
-def generate(model,
-             tokenizer,
-             inputs,
-             num_beams=1,
-             num_beam_groups=1,
-             do_sample=False,
-             num_return_sequences=1,
-             max_new_tokens=100):
-
-    generate_ids = model.generate(inputs.input_ids,
-                                  attention_mask=inputs.attention_mask,
-                                  num_beams=num_beams,
-                                  num_beam_groups=num_beam_groups,
-                                  do_sample=do_sample,
-                                  num_return_sequences=num_return_sequences,
-                                  max_new_tokens=max_new_tokens)
-
-    result = tokenizer.batch_decode(generate_ids,
-                                    skip_special_tokens=True,
-                                    clean_up_tokenization_spaces=False)
-    return result
-
-
-def generate_constrastive_search(model,
-                                 tokenizer,
-                                 inputs,
-                                 top_k=4,
-                                 penalty_alpha=0.6,
-                                 num_return_sequences=1,
-                                 max_new_tokens=100):
-
-    generate_ids = model.generate(inputs.input_ids,
-                                  top_k=top_k,
-                                  penalty_alpha=penalty_alpha,
-                                  num_return_sequences=num_return_sequences,
-                                  max_new_tokens=max_new_tokens)
-
-    result = tokenizer.batch_decode(generate_ids,
-                                    skip_special_tokens=True,
-                                    clean_up_tokenization_spaces=False)
-    return result
-
-
-def print_utils(gen_output):
-    for i in range(len(gen_output)):
-        print()
-        print(gen_output[i])
-        print()
 
 
 def main():
