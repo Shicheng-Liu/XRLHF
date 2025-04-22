@@ -20,6 +20,12 @@ logger = logging.getLogger(__name__)
 def parse_args():
     parser = argparse.ArgumentParser(description="Eval the finetued SFT model")
     parser.add_argument(
+        "--reward_model_name",
+        type=str,
+        help="Reward model name",
+        required=True,
+    )
+    parser.add_argument(
         "--model_name_or_path_baseline",
         type=str,
         help="Path to baseline model",
@@ -292,7 +298,7 @@ def prompt_eval(args, model_baseline, model_fintuned, model_rlhf, tokenizer, rew
             "response_sft": s,
             "response_rlhf": r
         })
-    with open("test_result.json","w") as f:
+    with open(f"{args.reward_model_name}_test_result.json","w") as f:
         json.dump(test_results,f,indent=4)
         # Note: we use the above simplest greedy search as the baseline. Users can also use other baseline methods,
         # such as beam search, multinomial sampling, and beam-search multinomial sampling.
