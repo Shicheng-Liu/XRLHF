@@ -8,7 +8,7 @@ import torch
 import json
 import numpy as np
 from transformers import AutoModelForCausalLM, AutoTokenizer, AutoModelForSequenceClassification
-from tqdm import tqdm
+
 from dschat.utils.model.model_utils import create_hf_model, create_critic_model
 from dschat.utils.utils import to_device, load_hf_tokenizer
 from deepspeed import get_accelerator
@@ -19,12 +19,6 @@ logger = logging.getLogger(__name__)
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Eval the finetued SFT model")
-    parser.add_argument(
-        "--reward_model_name",
-        type=str,
-        help="Reward model name",
-        required=True,
-    )
     parser.add_argument(
         "--model_name_or_path_baseline",
         type=str,
@@ -107,13 +101,6 @@ def parse_args():
         "--add_eot_token",
         action='store_true',
         help="Add <|endoftext|> as additional special token to tokenizer")
-    parser.add_argument(
-        "--batch_size",
-        type=int,
-        default=8,
-        help='batch size',
-    )
-
 
     args = parser.parse_args()
 
@@ -212,9 +199,7 @@ def prompt_eval(args, model_baseline, model_fintuned, model_rlhf, tokenizer, rew
     base_response = []
     finetune_response = []
     rlhf_response = []
-    
-    for prompt in tqdm(prompts,desc="processing prompts"):
-
+    for prompt in prompts:
         inputs = tokenizer(prompt, return_tensors="pt", padding=True, truncation=True).to(device)
         
         # Ensure the pad_token is set, especially if it's the same as eos_token
@@ -307,7 +292,7 @@ def prompt_eval(args, model_baseline, model_fintuned, model_rlhf, tokenizer, rew
             "response_sft": s,
             "response_rlhf": r
         })
-    with open(f"{args.reward_model_name}_test_result.json","w") as f:
+    with open("test_result.json","w") as f:
         json.dump(test_results,f,indent=4)
         # Note: we use the above simplest greedy search as the baseline. Users can also use other baseline methods,
         # such as beam search, multinomial sampling, and beam-search multinomial sampling.
@@ -400,7 +385,7 @@ def main():
     # Finetuned models have less such issue. Thus following prompts all end with ":"
     # to make it a more meaningful comparison.
     ds = load_dataset("json", data_files=args.data_path)["train"]
-    prompts = ds["prompt"][:500]
+    prompts = ds["prompt"]
 
     reward_base, reward_finetune, reward_rlhf = prompt_eval(args, model_baseline, model_fintuned, model_rlhf, tokenizer, reward_model, reward_tokenizer, device, prompts)
     print("reward for base model",np.mean(reward_base))
