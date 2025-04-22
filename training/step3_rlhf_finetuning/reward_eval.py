@@ -205,12 +205,19 @@ def main():
     response_sft = ds["response_sft"]
     response_rlhf = ds["response_rlhf"]
 
+    
+    
     reward_base = []
     reward_finetune = []
     reward_rlhf = []
-
+    i = 0
     for prompt, base_response, sft_response, rlhf_response in tqdm(zip(prompts, response_base, response_sft, response_rlhf),total=len(prompts),desc="Evaulation process"):
-        
+        if i > 2:
+            break
+        i += 1
+        print('base_response',base_response)
+        print('sft_response',sft_response)
+        print('rlhf_response',rlhf_response)
         
         base_batch = prepare_singlesample(prompt, base_response, reward_tokenizer, max_seq_len=512, end_of_conversation_token=args.end_of_conversation_token)
         base_batch = to_device(base_batch, device)
@@ -224,7 +231,7 @@ def main():
             else:
                 base_outputs = reward_model(**base_batch)
                 reward_base.append(base_outputs.logits.squeeze(-1).float().cpu().numpy())
-                
+        print('based reward', base_outputs.logits.squeeze(-1).float().cpu().numpy())
         
         finetune_batch = prepare_singlesample(prompt, sft_response, reward_tokenizer, max_seq_len=512, end_of_conversation_token=args.end_of_conversation_token)
         finetune_batch = to_device(finetune_batch, device)
@@ -239,7 +246,7 @@ def main():
                 finetune_outputs = reward_model(**finetune_batch)
                 reward_finetune.append(finetune_outputs.logits.squeeze(-1).float().cpu().numpy())
                 
-        #print("finetune answer score: ", finetune_outputs["chosen_end_scores"].item())
+        print('finetune reward', finetune_outputs.logits.squeeze(-1).float().cpu().numpy())
         
 
         
@@ -255,6 +262,7 @@ def main():
                 rlhf_outputs = reward_model(**rlhf_batch)
                 reward_rlhf.append(rlhf_outputs.logits.squeeze(-1).float().cpu().numpy())
 
+        print('rlhf reward', rlhf_outputs.logits.squeeze(-1).float().cpu().numpy())
 
     print("reward for base model",np.mean(reward_base))
     print("reward for SFT model",np.mean(reward_finetune))
