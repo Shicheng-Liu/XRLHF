@@ -242,14 +242,14 @@ def prompt_eval(args, model_baseline, model_fintuned, model_rlhf, tokenizer, rew
         #print("baseline answer score: ", base_outputs["chosen_end_scores"].item())
         
 
-        #print("==========finetune: Greedy=========")
+        print("==========finetune: Greedy=========")
         r_finetune_g = generate(model_fintuned,
                                 tokenizer,
                                 inputs,
                                 num_beams=1,
                                 num_return_sequences=args.num_return_sequences,
                                 max_new_tokens=args.max_new_tokens)
-        #print_utils(r_finetune_g)
+        print_utils(r_finetune_g)
         finetune_response.append(r_finetune_g[0])
         finetune_batch = prepare_singlesample(prompt, r_finetune_g, reward_tokenizer, max_seq_len=512, end_of_conversation_token=args.end_of_conversation_token)
         finetune_batch = to_device(finetune_batch, device)
@@ -264,17 +264,17 @@ def prompt_eval(args, model_baseline, model_fintuned, model_rlhf, tokenizer, rew
                 finetune_outputs = reward_model(**finetune_batch)
                 reward_finetune.append(finetune_outputs.logits.squeeze(-1).float().cpu().numpy())
                 
-        #print("finetune answer score: ", finetune_outputs["chosen_end_scores"].item())
+        print("finetune answer score: ", finetune_outputs["chosen_end_scores"].item())
         
 
-        #print("==========rlhf: Greedy=========")
+        print("==========rlhf: Greedy=========")
         r_rlhf_g = generate(model_rlhf,
                                 tokenizer,
                                 inputs,
                                 num_beams=1,
                                 num_return_sequences=args.num_return_sequences,
                                 max_new_tokens=args.max_new_tokens)
-        #print_utils(r_rlhf_g)
+        print_utils(r_rlhf_g)
         rlhf_response.append(r_rlhf_g[0])
         rlhf_batch = prepare_singlesample(prompt, r_rlhf_g, reward_tokenizer, max_seq_len=512, end_of_conversation_token=args.end_of_conversation_token)
         rlhf_batch = to_device(rlhf_batch, device)
@@ -287,7 +287,7 @@ def prompt_eval(args, model_baseline, model_fintuned, model_rlhf, tokenizer, rew
             else:
                 rlhf_outputs = reward_model(**rlhf_batch)
                 reward_rlhf.append(rlhf_outputs.logits.squeeze(-1).float().cpu().numpy())
-        #print("rlhf answer score: ", rlhf_outputs["chosen_end_scores"].item())
+        print("rlhf answer score: ", rlhf_outputs["chosen_end_scores"].item())
         
 
     test_results = []
