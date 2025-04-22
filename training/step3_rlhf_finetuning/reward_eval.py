@@ -190,7 +190,7 @@ def main():
     reward_finetune_list = []
     reward_rlhf_list = []
     win_rate_list = []
-    for prompt, base_response, sft_response, rlhf_response in tqdm(zip(prompts, response_base, response_sft, response_rlhf),total=len(prompts),desc="Evaulation process"):
+    for prompt, base_response, sft_response, rlhf_response in tqdm(zip(prompts, response_base, response_sft, response_rlhf),total=len(prompts),desc="Evaluation process"):
         
         # print('base_response',base_response)
         # print('sft_response',sft_response)
