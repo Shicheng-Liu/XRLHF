@@ -8,7 +8,7 @@ out_path = "tldr"
 
 os.makedirs(out_path, exist_ok=True)
 
-splits = ["train"]
+splits = ["train","test"]
 for split in splits:
     data_path = os.path.join(raw_path, split + ".json")
     data = []
